@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 
-const MAX_CAPTION = 280;
+const MAX_CAPTION = 1000;
 
 export default function UploadPage() {
   const [caption, setCaption] = useState("");
