@@ -83,11 +83,11 @@ export default function UploadPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0c0c0c] flex items-center justify-center px-4 py-16">
+    <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       {/* Ambient background glow */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-[#FF6B35]/6 blur-[120px]" />
-        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] rounded-full bg-[#FF6B35]/4 blur-[100px]" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full bg-[#FF6B35]/5 blur-[120px]" />
+        <div className="absolute bottom-0 right-0 w-[400px] h-[300px] rounded-full bg-blue-500/5 blur-[100px]" />
       </div>
 
       <div className="relative w-full max-w-lg">
@@ -113,21 +113,21 @@ export default function UploadPage() {
               Upload
             </span>
           </div>
-          <h1 className="text-3xl font-bold text-white leading-tight">
-            Share to social
+          <h1 className="text-3xl font-bold text-gray-900 leading-tight">
+            One-Click Social Posting
           </h1>
-          <p className="text-[#666] text-sm mt-1.5">
+          <p className="text-gray-600 text-sm mt-1.5">
             Upload images and a caption — we&apos;ll handle the rest.
           </p>
         </div>
 
         {/* Card */}
-        <div className="bg-[#141414] border border-[#222] rounded-2xl overflow-hidden shadow-2xl">
+        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-xl">
           <div className="p-6 space-y-5">
             {/* Drop Zone / Previews */}
             <div>
               <div className="flex items-center justify-between mb-2.5">
-                <label className="block text-xs font-semibold text-[#888] uppercase tracking-widest">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest">
                   Images
                   {imageFiles.length > 0 && (
                     <span className="ml-2 text-[#FF6B35]">
@@ -151,7 +151,7 @@ export default function UploadPage() {
                   {previews.map((src, i) => (
                     <div
                       key={src}
-                      className="relative group aspect-square rounded-lg overflow-hidden bg-[#0f0f0f]"
+                      className="relative group aspect-square rounded-lg overflow-hidden bg-gray-100"
                     >
                       <Image
                         src={src}
@@ -162,7 +162,7 @@ export default function UploadPage() {
                       />
                       <button
                         onClick={() => removeImage(i)}
-                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 hover:bg-red-500/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all"
+                        className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 hover:bg-red-500 text-gray-700 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                         aria-label="Remove"
                       >
                         <svg
@@ -194,19 +194,19 @@ export default function UploadPage() {
                     "relative cursor-pointer rounded-xl border-2 border-dashed transition-all duration-200",
                     "flex flex-col items-center justify-center py-12 px-6 text-center",
                     dragging
-                      ? "border-[#FF6B35] bg-[#FF6B35]/8"
-                      : "border-[#2a2a2a] bg-[#0f0f0f] hover:border-[#444] hover:bg-[#161616]",
+                      ? "border-[#FF6B35] bg-[#FF6B35]/5"
+                      : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100",
                   ].join(" ")}
                 >
                   <div
-                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${dragging ? "bg-[#FF6B35]/20" : "bg-[#1e1e1e]"}`}
+                    className={`w-12 h-12 rounded-full flex items-center justify-center mb-4 transition-colors ${dragging ? "bg-[#FF6B35]/20" : "bg-gray-200"}`}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
                       strokeWidth={1.5}
-                      className={`w-6 h-6 transition-colors ${dragging ? "text-[#FF6B35]" : "text-[#555]"}`}
+                      className={`w-6 h-6 transition-colors ${dragging ? "text-[#FF6B35]" : "text-gray-500"}`}
                     >
                       <path
                         d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
@@ -215,12 +215,12 @@ export default function UploadPage() {
                       />
                     </svg>
                   </div>
-                  <p className="text-white/70 text-sm font-medium">
+                  <p className="text-gray-700 text-sm font-medium">
                     {dragging
                       ? "Drop them here"
                       : "Drag & drop or click to upload"}
                   </p>
-                  <p className="text-[#555] text-xs mt-1.5">
+                  <p className="text-gray-500 text-xs mt-1.5">
                     PNG, JPG, WEBP — multiple files supported
                   </p>
                 </div>
@@ -237,8 +237,8 @@ export default function UploadPage() {
                     "cursor-pointer rounded-xl border border-dashed transition-all duration-200",
                     "flex items-center justify-center gap-2 py-2.5 text-xs",
                     dragging
-                      ? "border-[#FF6B35] bg-[#FF6B35]/8 text-[#FF6B35]"
-                      : "border-[#2a2a2a] text-[#555] hover:border-[#444] hover:text-[#888]",
+                      ? "border-[#FF6B35] bg-[#FF6B35]/5 text-[#FF6B35]"
+                      : "border-gray-300 text-gray-600 hover:border-gray-400 hover:text-gray-700",
                   ].join(" ")}
                 >
                   <svg
@@ -269,11 +269,11 @@ export default function UploadPage() {
             {/* Caption */}
             <div>
               <div className="flex items-center justify-between mb-2.5">
-                <label className="block text-xs font-semibold text-[#888] uppercase tracking-widest">
+                <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest">
                   Caption
                 </label>
                 <span
-                  className={`text-xs tabular-nums transition-colors ${caption.length > MAX_CAPTION * 0.9 ? "text-[#FF6B35]" : "text-[#555]"}`}
+                  className={`text-xs tabular-nums transition-colors ${caption.length > MAX_CAPTION * 0.9 ? "text-[#FF6B35]" : "text-gray-500"}`}
                 >
                   {caption.length} / {MAX_CAPTION}
                 </span>
@@ -285,13 +285,13 @@ export default function UploadPage() {
                 }
                 placeholder="Write something memorable..."
                 rows={3}
-                className="w-full bg-[#0f0f0f] border border-[#222] hover:border-[#333] focus:border-[#FF6B35]/50 focus:outline-none text-white placeholder-[#444] text-sm rounded-xl px-4 py-3 resize-none transition-colors leading-relaxed"
+                className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 text-gray-900 placeholder-gray-400 text-sm rounded-xl px-4 py-3 resize-none transition-colors leading-relaxed"
               />
             </div>
 
             {/* Status Messages */}
             {status === "success" && (
-              <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm rounded-xl px-4 py-3">
+              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -308,7 +308,7 @@ export default function UploadPage() {
             )}
 
             {status === "error" && (
-              <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 text-red-400 text-sm rounded-xl px-4 py-3">
+              <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
                 <svg
                   viewBox="0 0 20 20"
                   fill="currentColor"
@@ -332,8 +332,8 @@ export default function UploadPage() {
                 "w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all duration-200",
                 "flex items-center justify-center gap-2.5",
                 !imageFiles.length || loading
-                  ? "bg-[#1e1e1e] text-[#444] cursor-not-allowed border border-[#222]"
-                  : "bg-[#FF6B35] hover:bg-[#ff7a47] text-white shadow-lg shadow-[#FF6B35]/20 hover:shadow-[#FF6B35]/30 active:scale-[0.98]",
+                  ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
+                  : "bg-[#FF6B35] hover:bg-[#ff7a47] text-white shadow-lg shadow-[#FF6B35]/30 hover:shadow-[#FF6B35]/40 active:scale-[0.98]",
               ].join(" ")}
             >
               {loading ? (
