@@ -5,6 +5,63 @@ import Image from "next/image";
 
 const MAX_CAPTION = 1000;
 
+type Mode = "manual" | "ai" | "video";
+type SocialPlatform = "facebook" | "instagram" | "twitter" | "linkedin";
+
+const MODES: { id: Mode; label: string }[] = [
+  { id: "manual", label: "Manual" },
+  { id: "ai", label: "AI Mode" },
+  { id: "video", label: "Video" },
+];
+
+const PLATFORMS: {
+  id: SocialPlatform;
+  label: string;
+  icon: React.ReactNode;
+  color: string;
+}[] = [
+  {
+    id: "facebook",
+    label: "Facebook",
+    color: "#1877F2",
+    icon: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+      </svg>
+    ),
+  },
+  {
+    id: "instagram",
+    label: "Instagram",
+    color: "#E1306C",
+    icon: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+      </svg>
+    ),
+  },
+  {
+    id: "twitter",
+    label: "X / Twitter",
+    color: "#000000",
+    icon: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.737-8.835L1.254 2.25H8.08l4.259 5.631 5.905-5.631zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+      </svg>
+    ),
+  },
+  {
+    id: "linkedin",
+    label: "LinkedIn",
+    color: "#0A66C2",
+    icon: (
+      <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.32 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.79M6.88 8.56a1.68 1.68 0 0 0 1.68-1.68c0-.93-.75-1.69-1.68-1.69a1.69 1.69 0 0 0-1.69 1.69c0 .93.76 1.68 1.69 1.68m1.39 9.94v-8.37H5.5v8.37h2.77z" />
+      </svg>
+    ),
+  },
+];
+
 export default function UploadPage() {
   const [caption, setCaption] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
@@ -12,7 +69,20 @@ export default function UploadPage() {
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
   const [dragging, setDragging] = useState(false);
+  const [mode, setMode] = useState<Mode>("manual");
+  const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([
+    "facebook",
+    "instagram",
+    "twitter",
+    "linkedin",
+  ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const togglePlatform = (id: SocialPlatform) => {
+    setSelectedPlatforms((prev) =>
+      prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id],
+    );
+  };
 
   const addFiles = (incoming: FileList | File[]) => {
     const valid = Array.from(incoming).filter((f) =>
@@ -52,13 +122,44 @@ export default function UploadPage() {
     setStatus("idle");
   };
 
+  const moveImage = (fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= imageFiles.length) return;
+
+    setImageFiles((prev) => {
+      const newFiles = [...prev];
+      const [movedFile] = newFiles.splice(fromIndex, 1);
+      newFiles.splice(toIndex, 0, movedFile);
+      return newFiles;
+    });
+
+    setPreviews((prev) => {
+      const newPreviews = [...prev];
+      const [movedPreview] = newPreviews.splice(fromIndex, 1);
+      newPreviews.splice(toIndex, 0, movedPreview);
+      return newPreviews;
+    });
+  };
+
+  const moveImageUp = (index: number) => {
+    if (index > 0) moveImage(index, index - 1);
+  };
+
+  const moveImageDown = (index: number) => {
+    if (index < imageFiles.length - 1) moveImage(index, index + 1);
+  };
+
   const handleSubmit = async () => {
-    if (!imageFiles.length) return;
+    if (!imageFiles.length || !selectedPlatforms.length) return;
+    if (mode === "manual" && !caption.trim()) return;
     setLoading(true);
     setStatus("idle");
 
     const formData = new FormData();
     formData.append("caption", caption);
+    formData.append("mode", mode);
+    selectedPlatforms.forEach((platform) =>
+      formData.append("platforms[]", platform),
+    );
     imageFiles.forEach((file) => formData.append("images", file, file.name));
 
     try {
@@ -82,6 +183,12 @@ export default function UploadPage() {
     }
   };
 
+  const canSubmit =
+    imageFiles.length > 0 &&
+    selectedPlatforms.length > 0 &&
+    !loading &&
+    (mode !== "manual" || caption.trim().length > 0);
+
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
       {/* Ambient background glow */}
@@ -92,7 +199,7 @@ export default function UploadPage() {
 
       <div className="relative w-full max-w-lg">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-2">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-8 h-8 rounded-lg bg-[#FF6B35] flex items-center justify-center">
               <svg
@@ -160,6 +267,57 @@ export default function UploadPage() {
                         className="object-cover"
                         unoptimized
                       />
+
+                      {/* Position indicator */}
+                      <div className="absolute top-1 left-1 w-5 h-5 rounded-full bg-[#FF6B35] text-white text-xs font-bold flex items-center justify-center shadow-lg">
+                        {i + 1}
+                      </div>
+
+                      {/* Reorder controls */}
+                      {imageFiles.length > 1 && (
+                        <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                          <button
+                            onClick={() => moveImageUp(i)}
+                            disabled={i === 0}
+                            className="w-6 h-6 rounded-full bg-white/90 hover:bg-[#FF6B35] text-gray-700 hover:text-white flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            aria-label="Move up"
+                            title="Move left"
+                          >
+                            <svg
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="w-3 h-3"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => moveImageDown(i)}
+                            disabled={i === imageFiles.length - 1}
+                            className="w-6 h-6 rounded-full bg-white/90 hover:bg-[#FF6B35] text-gray-700 hover:text-white flex items-center justify-center shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                            aria-label="Move down"
+                            title="Move right"
+                          >
+                            <svg
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                              className="w-3 h-3"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Remove button */}
                       <button
                         onClick={() => removeImage(i)}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 hover:bg-red-500 text-gray-700 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
@@ -268,25 +426,105 @@ export default function UploadPage() {
 
             {/* Caption */}
             <div>
+              {/* Mode Selector */}
+              <div className="px-1.5 pt-1.5 mb-3">
+                <div className="flex bg-gray-100 rounded-xl p-1 gap-1">
+                  {MODES.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => setMode(m.id)}
+                      className={[
+                        "flex-1 py-2 px-3 rounded-lg text-sm font-semibold transition-all duration-200",
+                        mode === m.id
+                          ? "bg-[#1a2035] text-white shadow-sm"
+                          : "text-gray-500 hover:text-gray-700",
+                      ].join(" ")}
+                    >
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex items-center justify-between mb-2.5">
                 <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest">
                   Caption
+                  {mode === "ai" && (
+                    <span className="ml-2 text-[#FF6B35] normal-case font-normal text-xs">
+                      (AI Generated)
+                    </span>
+                  )}
                 </label>
-                <span
-                  className={`text-xs tabular-nums transition-colors ${caption.length > MAX_CAPTION * 0.9 ? "text-[#FF6B35]" : "text-gray-500"}`}
-                >
-                  {caption.length} / {MAX_CAPTION}
-                </span>
+                {mode !== "ai" && (
+                  <span
+                    className={`text-xs tabular-nums transition-colors ${caption.length > MAX_CAPTION * 0.9 ? "text-[#FF6B35]" : "text-gray-500"}`}
+                  >
+                    {caption.length} / {MAX_CAPTION}
+                  </span>
+                )}
               </div>
               <textarea
-                value={caption}
+                value={mode === "ai" ? "" : caption}
                 onChange={(e) =>
                   setCaption(e.target.value.slice(0, MAX_CAPTION))
                 }
-                placeholder="Write something memorable..."
+                placeholder={
+                  mode === "ai"
+                    ? "Just upload and we'll generate a caption for you!"
+                    : "Write something memorable..."
+                }
                 rows={3}
-                className="w-full bg-white border border-gray-300 hover:border-gray-400 focus:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 text-gray-900 placeholder-gray-400 text-sm rounded-xl px-4 py-3 resize-none transition-colors leading-relaxed"
+                disabled={mode === "ai"}
+                className={`w-full border text-sm rounded-xl px-4 py-3 resize-none transition-colors leading-relaxed ${
+                  mode === "ai"
+                    ? "bg-gray-100 border-gray-200 text-gray-400 placeholder-gray-400 cursor-not-allowed"
+                    : "bg-white border-gray-300 hover:border-gray-400 focus:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 text-gray-900 placeholder-gray-400"
+                }`}
               />
+            </div>
+
+            {/* Social Media Pills */}
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 uppercase tracking-widest mb-2.5">
+                Post to
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {PLATFORMS.map((platform) => {
+                  const selected = selectedPlatforms.includes(platform.id);
+                  return (
+                    <button
+                      key={platform.id}
+                      onClick={() => togglePlatform(platform.id)}
+                      style={
+                        selected
+                          ? {
+                              backgroundColor: platform.color,
+                              borderColor: platform.color,
+                              color: "#fff",
+                            }
+                          : {}
+                      }
+                      className={[
+                        "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold transition-all duration-150 select-none",
+                        selected
+                          ? "shadow-sm"
+                          : "bg-white border-gray-300 text-gray-500 hover:border-gray-400",
+                      ].join(" ")}
+                    >
+                      {platform.icon}
+                      {platform.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5">
+                Click icon to disable
+              </p>
+              {selectedPlatforms.length === 0 && (
+                <p className="text-xs text-red-500 mt-1.5">
+                  Select at least one platform.
+                </p>
+              )}
             </div>
 
             {/* Status Messages */}
@@ -303,7 +541,7 @@ export default function UploadPage() {
                     clipRule="evenodd"
                   />
                 </svg>
-                <span>Images uploaded successfully!</span>
+                <span>Posted successfully!</span>
               </div>
             )}
 
@@ -327,13 +565,13 @@ export default function UploadPage() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={!imageFiles.length || loading}
+              disabled={!canSubmit}
               className={[
                 "w-full py-3.5 rounded-xl font-semibold text-sm tracking-wide transition-all duration-200",
                 "flex items-center justify-center gap-2.5",
-                !imageFiles.length || loading
+                !canSubmit
                   ? "bg-gray-200 text-gray-400 cursor-not-allowed border border-gray-300"
-                  : "bg-[#FF6B35] hover:bg-[#ff7a47] text-white shadow-lg shadow-[#FF6B35]/30 hover:shadow-[#FF6B35]/40 active:scale-[0.98]",
+                  : "bg-[#1a2035] hover:bg-[#232c47] text-white shadow-lg shadow-[#1a2035]/30 hover:shadow-[#1a2035]/40 active:scale-[0.98]",
               ].join(" ")}
             >
               {loading ? (

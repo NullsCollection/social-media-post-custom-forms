@@ -4,6 +4,8 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const caption = formData.get("caption") as string;
+    const mode = formData.get("mode") as string;
+    const platforms = formData.getAll("platforms[]") as string[];
     const images = formData.getAll("images") as File[];
 
     const validImages = images.filter((f) => f && f.size > 0);
@@ -27,6 +29,10 @@ export async function POST(req: NextRequest) {
       forwardData.append("images", image, image.name),
     );
     forwardData.append("caption", caption || "");
+    forwardData.append("mode", mode || "manual");
+    platforms.forEach((platform) =>
+      forwardData.append("platforms[]", platform),
+    );
     forwardData.append(
       "filenames",
       JSON.stringify(validImages.map((f) => f.name)),
