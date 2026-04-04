@@ -150,7 +150,6 @@ export default function UploadPage() {
 
   const handleSubmit = async () => {
     if (!imageFiles.length || !selectedPlatforms.length) return;
-    if (mode === "manual" && !caption.trim()) return;
     setLoading(true);
     setStatus("idle");
 
@@ -184,10 +183,7 @@ export default function UploadPage() {
   };
 
   const canSubmit =
-    imageFiles.length > 0 &&
-    selectedPlatforms.length > 0 &&
-    !loading &&
-    (mode !== "manual" || caption.trim().length > 0);
+    imageFiles.length > 0 && selectedPlatforms.length > 0 && !loading;
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-16">
@@ -464,10 +460,19 @@ export default function UploadPage() {
                 )}
               </div>
               <textarea
+                ref={(textarea) => {
+                  if (textarea && mode !== "ai") {
+                    textarea.style.height = "auto";
+                    textarea.style.height = `${textarea.scrollHeight}px`;
+                  }
+                }}
                 value={mode === "ai" ? "" : caption}
-                onChange={(e) =>
-                  setCaption(e.target.value.slice(0, MAX_CAPTION))
-                }
+                onChange={(e) => {
+                  const newValue = e.target.value.slice(0, MAX_CAPTION);
+                  setCaption(newValue);
+                  e.target.style.height = "auto";
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
                 placeholder={
                   mode === "ai"
                     ? "Just upload and we'll generate a caption for you!"
@@ -475,7 +480,7 @@ export default function UploadPage() {
                 }
                 rows={3}
                 disabled={mode === "ai"}
-                className={`w-full border text-sm rounded-xl px-4 py-3 resize-none transition-colors leading-relaxed ${
+                className={`w-full border text-sm rounded-xl px-4 py-3 resize-y transition-colors leading-relaxed max-h-[1000px] ${
                   mode === "ai"
                     ? "bg-gray-100 border-gray-200 text-gray-400 placeholder-gray-400 cursor-not-allowed"
                     : "bg-white border-gray-300 hover:border-gray-400 focus:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 text-gray-900 placeholder-gray-400"
