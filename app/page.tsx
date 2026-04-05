@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import Image from "next/image";
 
 const MAX_CAPTION = 1000;
@@ -67,7 +67,7 @@ export default function UploadPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "error">("idle");
   const [dragging, setDragging] = useState(false);
   const [mode, setMode] = useState<Mode>("manual");
   const [selectedPlatforms, setSelectedPlatforms] = useState<SocialPlatform[]>([
@@ -77,6 +77,125 @@ export default function UploadPage() {
     "linkedin",
   ]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Caption review + completion state
+  const [captionModal, setCaptionModal] = useState<{
+    caption: string;
+    executionId: string;
+    resumeUrl: string;
+  } | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editText, setEditText] = useState("");
+  const [modalLocked, setModalLocked] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const [successModal, setSuccessModal] = useState<string | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const previewsRef = useRef<string[]>([]);
+  const executionIdRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    previewsRef.current = previews;
+  }, [previews]);
+
+  const stopPolling = useCallback(() => {
+    if (pollingRef.current) {
+      clearInterval(pollingRef.current);
+      pollingRef.current = null;
+    }
+  }, []);
+
+  const showToast = useCallback((message: string, duration = 5000) => {
+    setToast(message);
+    setTimeout(() => setToast(null), duration);
+  }, []);
+
+  const startPolling = useCallback(
+    (id: string) => {
+      stopPolling();
+      pollingRef.current = setInterval(async () => {
+        try {
+          const res = await fetch(
+            `/api/caption-status?executionId=${encodeURIComponent(id)}`,
+          );
+          if (!res.ok) return;
+          const data = await res.json();
+
+          if (data.completed) {
+            stopPolling();
+            const platformList = (data.platforms as string[])
+              .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1))
+              .join(", ");
+            setSuccessModal(platformList);
+            setLoading(false);
+            setStatus("idle");
+            executionIdRef.current = null;
+            setCaption("");
+            previewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+            setImageFiles([]);
+            setPreviews([]);
+          } else if (!data.pending) {
+            stopPolling();
+            setCaptionModal({
+              caption: data.caption,
+              executionId: data.executionId,
+              resumeUrl: data.resumeUrl,
+            });
+          }
+        } catch {
+          // silent — keep polling on next tick
+        }
+      }, 2000);
+    },
+    [stopPolling, showToast],
+  );
+
+  const handleApprove = async () => {
+    if (!captionModal) return;
+    setModalLocked(true);
+    const { resumeUrl } = captionModal;
+    try {
+      await fetch(resumeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: { approval: "approved" } }),
+      });
+    } catch {
+      // continue regardless
+    }
+    stopPolling();
+    executionIdRef.current = null;
+    setCaptionModal(null);
+    setEditMode(false);
+    setEditText("");
+    setModalLocked(false);
+    setLoading(false);
+    showToast("Caption approved! Posting now...", 3000);
+  };
+
+  const handleSubmitEdit = async () => {
+    if (!captionModal || !editText.trim()) return;
+    setModalLocked(true);
+    const { resumeUrl, executionId } = captionModal;
+    try {
+      await fetch(resumeUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: { approval: editText.trim() } }),
+      });
+    } catch {
+      // continue regardless
+    }
+    setCaptionModal(null);
+    setEditMode(false);
+    setEditText("");
+    setModalLocked(false);
+    showToast("Edit sent! Regenerating caption...", 3000);
+    // Clear the old caption from the store, then restart polling for the new one
+    await fetch(`/api/caption-status?executionId=${encodeURIComponent(executionId)}`, {
+      method: "DELETE",
+    }).catch(() => {});
+    startPolling(executionId);
+  };
 
   const togglePlatform = (id: SocialPlatform) => {
     setSelectedPlatforms((prev) =>
@@ -150,10 +269,22 @@ export default function UploadPage() {
 
   const handleSubmit = async () => {
     if (!imageFiles.length || !selectedPlatforms.length) return;
+
+    // Full reset before each new submission lifecycle
+    stopPolling();
+    executionIdRef.current = null;
+    setCaptionModal(null);
+    setEditMode(false);
+    setEditText("");
+    setModalLocked(false);
+
+    const id = crypto.randomUUID();
+    executionIdRef.current = id;
     setLoading(true);
     setStatus("idle");
 
     const formData = new FormData();
+    formData.append("executionId", id);
     formData.append("caption", caption);
     formData.append("mode", mode);
     selectedPlatforms.forEach((platform) =>
@@ -167,18 +298,16 @@ export default function UploadPage() {
         body: formData,
       });
       if (res.ok) {
-        setStatus("success");
-        setCaption("");
-        previews.forEach((url) => URL.revokeObjectURL(url));
-        setImageFiles([]);
-        setPreviews([]);
+        startPolling(id);
       } else {
         setStatus("error");
+        setLoading(false);
+        executionIdRef.current = null;
       }
     } catch {
       setStatus("error");
-    } finally {
       setLoading(false);
+      executionIdRef.current = null;
     }
   };
 
@@ -532,24 +661,7 @@ export default function UploadPage() {
               )}
             </div>
 
-            {/* Status Messages */}
-            {status === "success" && (
-              <div className="flex items-center gap-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm rounded-xl px-4 py-3">
-                <svg
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                  className="w-4 h-4 flex-shrink-0"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-                <span>Posted successfully!</span>
-              </div>
-            )}
-
+            {/* Error Status */}
             {status === "error" && (
               <div className="flex items-center gap-3 bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3">
                 <svg
@@ -600,7 +712,7 @@ export default function UploadPage() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                     />
                   </svg>
-                  Sending...
+                  Posting...
                 </>
               ) : (
                 <>
@@ -699,6 +811,108 @@ export default function UploadPage() {
           </p>
         </footer>
       </div>
+
+      {/* Caption Review Modal */}
+      {captionModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-bold text-gray-900">
+              Review Your Caption
+            </h2>
+            <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
+              {captionModal.caption}
+            </div>
+
+            {!editMode ? (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleApprove}
+                  className="flex-1 py-2.5 rounded-xl bg-[#1a2035] hover:bg-[#232c47] text-white text-sm font-semibold transition-colors"
+                >
+                  Approve
+                </button>
+                <button
+                  onClick={() => setEditMode(true)}
+                  className="flex-1 py-2.5 rounded-xl border border-gray-300 text-gray-700 hover:border-gray-400 text-sm font-semibold transition-colors"
+                >
+                  Request Edit
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <textarea
+                  value={editText}
+                  onChange={(e) => setEditText(e.target.value)}
+                  placeholder="Describe what to change..."
+                  rows={4}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm text-gray-900 placeholder-gray-400 focus:border-[#FF6B35] focus:outline-none focus:ring-2 focus:ring-[#FF6B35]/20 resize-none"
+                />
+                <button
+                  onClick={handleSubmitEdit}
+                  disabled={!editText.trim()}
+                  className="w-full py-2.5 rounded-xl bg-[#1a2035] hover:bg-[#232c47] text-white text-sm font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Submit Edit
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Success Modal */}
+      {successModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
+          onClick={() => setSuccessModal(null)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-4 animate-fade-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center">
+              <svg className="w-7 h-7 text-emerald-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="text-center">
+              <h3 className="text-lg font-bold text-gray-900">Successfully Posted!</h3>
+              <p className="text-sm text-gray-500 mt-1">Your content was posted to {successModal}.</p>
+            </div>
+            <button
+              onClick={() => setSuccessModal(null)}
+              className="w-full py-2.5 rounded-xl bg-[#1a2035] hover:bg-[#232c47] text-white text-sm font-semibold transition-colors"
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 bg-emerald-500 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg animate-fade-in">
+          <svg
+            viewBox="0 0 20 20"
+            fill="currentColor"
+            className="w-4 h-4 flex-shrink-0"
+          >
+            <path
+              fillRule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+              clipRule="evenodd"
+            />
+          </svg>
+          {toast}
+        </div>
+      )}
     </main>
   );
 }
