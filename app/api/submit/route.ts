@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
+    const executionId = formData.get("executionId") as string;
     const caption = formData.get("caption") as string;
     const mode = formData.get("mode") as string;
     const platforms = formData.getAll("platforms[]") as string[];
@@ -28,6 +29,7 @@ export async function POST(req: NextRequest) {
     validImages.forEach((image) =>
       forwardData.append("images", image, image.name),
     );
+    forwardData.append("executionId", executionId || "");
     forwardData.append("caption", caption || "");
     forwardData.append("mode", mode || "manual");
     platforms.forEach((platform) =>
@@ -43,10 +45,6 @@ export async function POST(req: NextRequest) {
     const auth = Buffer.from(
       `${process.env.BASIC_AUTH_USER}:${process.env.BASIC_AUTH_PASS}`,
     ).toString("base64");
-
-    console.log("Sending to webhook:", process.env.WEBHOOK_URL);
-    console.log("Auth user:", process.env.BASIC_AUTH_USER);
-    console.log("Auth configured:", !!process.env.BASIC_AUTH_PASS);
 
     const webhookRes = await fetch(process.env.WEBHOOK_URL, {
       method: "POST",

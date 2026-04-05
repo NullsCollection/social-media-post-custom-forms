@@ -1,7 +1,10 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx create-next-app@latest:*)"
+      "Bash(npx create-next-app@latest:*)",
+      "Bash(node -e \"const p=require\\('./node_modules/next/package.json'\\); console.log\\(p.version\\)\")",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\(p.dependencies,null,2\\)\\); console.log\\(JSON.stringify\\(p.devDependencies,null,2\\)\\)\")",
+      "Bash(npx tsc:*)"
     ]
   }
 }
