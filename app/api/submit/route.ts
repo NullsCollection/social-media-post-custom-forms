@@ -46,10 +46,6 @@ export async function POST(req: NextRequest) {
       `${process.env.BASIC_AUTH_USER}:${process.env.BASIC_AUTH_PASS}`,
     ).toString("base64");
 
-    console.log("Sending to webhook:", process.env.WEBHOOK_URL);
-    console.log("Auth user:", process.env.BASIC_AUTH_USER);
-    console.log("Auth configured:", !!process.env.BASIC_AUTH_PASS);
-
     const webhookRes = await fetch(process.env.WEBHOOK_URL, {
       method: "POST",
       headers: {

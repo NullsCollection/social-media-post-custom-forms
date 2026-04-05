@@ -162,14 +162,16 @@ export default function UploadPage() {
     } catch {
       // continue regardless
     }
-    stopPolling();
-    executionIdRef.current = null;
+    const currentId = captionModal.executionId;
     setCaptionModal(null);
     setEditMode(false);
     setEditText("");
     setModalLocked(false);
-    setLoading(false);
     showToast("Caption approved! Posting now...", 3000);
+    await fetch(`/api/caption-status?executionId=${encodeURIComponent(currentId)}`, {
+      method: "DELETE",
+    }).catch(() => {});
+    startPolling(currentId);
   };
 
   const handleSubmitEdit = async () => {
