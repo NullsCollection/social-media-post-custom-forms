@@ -8,8 +8,6 @@ type CaptionEntry = {
 type CompletionEntry = {
   executionId: string;
   status: string;
-  platforms: string[];
-  caption: string;
 };
 
 const captionStore = new Map<string, CaptionEntry>();

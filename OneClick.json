@@ -1,5 +1,5 @@
 {
-  "name": "One-Click Social Media Post",
+  "name": "My workflow",
   "nodes": [
     {
       "parameters": {
@@ -8,10 +8,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        14272,
-        9152
+        3568,
+        2720
       ],
-      "id": "02696128-c5b0-43e1-97ff-9f91badaa4a7",
+      "id": "dad020bb-1b28-48a2-9bb8-c3666500fe6b",
       "name": "Output multiple images into 1  names"
     },
     {
@@ -26,10 +26,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        12944,
-        9168
+        2224,
+        2320
       ],
-      "id": "32448886-128a-4352-8afc-6358c4ef322f",
+      "id": "f385de0e-7e34-41e1-9e2b-3f7015582ec0",
       "name": "Webhook",
       "webhookId": "ccbdb5ee-ca4b-4c9c-b6f4-47fa7ba2843e",
       "credentials": {
@@ -122,10 +122,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        13168,
-        9152
+        2384,
+        2304
       ],
-      "id": "5a4d983b-b2d2-48a6-ba2a-56b10774a688",
+      "id": "d7b85e56-4302-4bbe-ad5e-da4ab11d0bd8",
       "name": "Seperate Mode"
     },
     {
@@ -145,10 +145,10 @@
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
-        13728,
-        8368
+        2896,
+        2176
       ],
-      "id": "cd77eade-fe25-4afe-90f2-4ee340f97589",
+      "id": "3b99c4c3-6968-4956-9a9f-5c40c364e330",
       "name": "Analyze image",
       "credentials": {
         "anthropicApi": {
@@ -164,10 +164,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        13504,
-        8368
+        2672,
+        2176
       ],
-      "id": "3c87e748-39df-4e3a-a5ac-56241bb5823d",
+      "id": "307fb0ab-5be8-4323-931b-602340d28c12",
       "name": "Output multiple images into 1  names1"
     },
     {
@@ -181,10 +181,10 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        15296,
-        9152
+        4912,
+        2384
       ],
-      "id": "e83a617d-3662-4bae-8caf-e1e46cbc4597",
+      "id": "f71fbb88-e18b-480a-a0ac-aed62f83406a",
       "name": "Split Out"
     },
     {
@@ -194,10 +194,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        13952,
-        8368
+        3120,
+        2176
       ],
-      "id": "3a21a4b7-12f3-4437-aa67-000bfaff22d8",
+      "id": "8dc7355d-fbbb-4865-a4aa-91d9a525bb44",
       "name": "Extract AI Response"
     },
     {
@@ -207,23 +207,23 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        15072,
-        8464
+        4240,
+        2272
       ],
-      "id": "78bd2c48-4230-4fe5-98a2-829b29021e60",
+      "id": "1386f7cb-b95b-4cec-bbdb-d393558fa969",
       "name": "Extract Caption Feedback"
     },
     {
       "parameters": {
-        "jsCode": "const prev = $('Webhook').first().json;\nconst setItem = $('Set').first().json;\n\nconst platforms = \n  prev.body?.['platforms[]'] ||\n  prev.body?.platforms ||\n  [];\n\nreturn [{\n  json: {\n    // from Webhook\n    ...prev,\n    platforms: platforms,\n    //'platforms[]': platforms,\n    executionMode: prev.executionMode ?? '',\n    webhookUrl: prev.body?.webhookUrl ?? '',\n    mode: prev.body?.mode ?? '',\n    filenames: prev.body?.filenames ?? [],\n    submitted_at: prev.body?.submitted_at ?? '',\n    image_count: prev.body?.image_count ?? 1,\n\n    // from Set (overrides webhook values with latest)\n    caption: setItem.caption ?? '',\n    fileName: setItem.fileName ?? prev.body?.filenames?.[0] ?? '',\n    executionId: setItem.executionId ?? prev.body?.executionId ?? '',\n    resumeUrl: setItem.resumeUrl ?? '',\n  },\n  ...(($('Output multiple images into 1  names1').first().binary) && {\n    binary: $('Output multiple images into 1  names1').first().binary\n  })\n}];"
+        "jsCode": "const prev = $('Webhook').first().json;\nconst setItem = $('Set').last().json;\n\nconst platforms = \n  prev.body?.['platforms[]'] ||\n  prev.body?.platforms ||\n  [];\n\n// get ALL images from the original node\nconst allImages = $('Output multiple images into 1  names1').all();\n\nreturn allImages.map((imageItem) => {\n  return {\n    json: {\n      // from Webhook\n      ...prev,\n      platforms: platforms,\n      executionMode: prev.executionMode ?? '',\n      webhookUrl: prev.body?.webhookUrl ?? '',\n      mode: prev.body?.mode ?? '',\n      filenames: prev.body?.filenames ?? [],\n      submitted_at: prev.body?.submitted_at ?? '',\n      image_count: prev.body?.image_count ?? 1,\n\n      // from Set (latest caption data)\n      caption: setItem.caption ?? '',\n      fileName: imageItem.json.fileName ?? prev.body?.filenames?.[0] ?? '',\n      executionId: setItem.executionId ?? prev.body?.executionId ?? '',\n      resumeUrl: setItem.resumeUrl ?? '',\n    },\n    // each image gets its own binary\n    ...(imageItem.binary && {\n      binary: imageItem.binary\n    })\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        15360,
-        8272
+        4528,
+        2080
       ],
-      "id": "736f4200-f8e2-4db0-b6b6-8befd781de49",
+      "id": "4b39b6af-fadd-435b-a0c7-63f7cdbac5a6",
       "name": "Extract final response"
     },
     {
@@ -253,10 +253,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        15072,
-        8272
+        4240,
+        2080
       ],
-      "id": "2afc6ac5-113b-43d3-b058-7c88de59d631",
+      "id": "83006599-793f-4122-bc00-4588d0fa34a6",
       "name": "Confirm"
     },
     {
@@ -273,10 +273,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        14400,
-        8368
+        3568,
+        2176
       ],
-      "id": "3c99a0f7-d918-42a6-a9e5-647f40b0997a",
+      "id": "04a785f8-4c23-4163-b87d-2ee705ebef7d",
       "name": "HTTP Request",
       "credentials": {
         "httpBasicAuth": {
@@ -305,10 +305,10 @@
       "type": "@n8n/n8n-nodes-langchain.anthropic",
       "typeVersion": 1,
       "position": [
-        15296,
-        8464
+        4464,
+        2272
       ],
-      "id": "f050a0af-fe48-4d96-afa4-bfdcd30bae21",
+      "id": "9799bae7-34c4-4b59-acfa-68d64c5b4f24",
       "name": "Message a model",
       "credentials": {
         "anthropicApi": {
@@ -324,10 +324,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        14176,
-        8368
+        3344,
+        2176
       ],
-      "id": "453d0fd5-fa18-4155-9651-aca2760103d5",
+      "id": "36f0b0e0-51bd-439c-bc27-c603b66413f5",
       "name": "Set"
     },
     {
@@ -357,10 +357,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        14848,
-        8368
+        4016,
+        2176
       ],
-      "id": "d63192b5-4cef-44e9-82e9-90d17050c6dd",
+      "id": "59e67b6e-c29f-4f12-88c5-af6ec9fb1789",
       "name": "If Approved or Not"
     },
     {
@@ -372,10 +372,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        14624,
-        8368
+        3792,
+        2176
       ],
-      "id": "42263612-8ee4-4f42-8dba-d4d2fe3abe34",
+      "id": "d3ebf3b2-9b17-4dbf-ac86-619d2ddc9591",
       "name": "Wait",
       "webhookId": "c1e8c1a8-aa12-4d6d-a67e-1204061d82c4"
     },
@@ -386,12 +386,12 @@
         "nodeCredentialType": "linkedInOAuth2Api",
         "options": {}
       },
-      "id": "08304dc2-0b42-4ede-9cac-6c0af413b2a9",
+      "id": "7ece5a2e-a46c-4d52-b165-79347f4d702c",
       "name": "Linkedin User URN",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        16224,
-        10256
+        5824,
+        3488
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -421,12 +421,12 @@
         "jsonBody": "={\n  \"initializeUploadRequest\": {\n       \"owner\": \"{{ 'urn:li:person:' + $('Linkedin User URN').item.json.sub }}\"\n  }\n}",
         "options": {}
       },
-      "id": "2c8c3fa8-78de-4516-8cd0-ccd4416f1c38",
+      "id": "fe9a3a62-91b1-4341-b125-5e76f2025dd9",
       "name": "Get Upload URL",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        16448,
-        10256
+        6048,
+        3488
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -464,12 +464,12 @@
         "jsonBody": "={{\n  {\n    \"author\": \"urn:li:person:\" + $('Linkedin User URN').first().json.sub,\n    \"commentary\": $('If3').item.json.caption,\n    \"visibility\": \"PUBLIC\",\n    \"distribution\": {\n      \"feedDistribution\": \"MAIN_FEED\",\n      \"targetEntities\": [],\n      \"thirdPartyDistributionChannels\": []\n    },\n    \"content\": {\n      \"multiImage\": {\n        \"images\": $('Collect All Asset').first().json.assets\n      }\n    },\n    \"lifecycleState\": \"PUBLISHED\",\n    \"isReshareDisabledByAuthor\": false\n  }\n}}",
         "options": {}
       },
-      "id": "134a14d4-6de2-4b24-9e62-395e0377081f",
+      "id": "a18d4b86-0d32-49fa-afb7-89bef33d25cc",
       "name": "Post to LinkedIn",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        16448,
-        10064
+        6048,
+        3296
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -503,12 +503,12 @@
         "inputDataFieldName": "image",
         "options": {}
       },
-      "id": "e9bca14b-fdf4-49ad-9565-6ec24325b29b",
+      "id": "87f5031d-73c6-4b32-a30a-86d895f46d15",
       "name": "Upload Image",
       "type": "n8n-nodes-base.httpRequest",
       "position": [
-        16896,
-        10256
+        6496,
+        3488
       ],
       "typeVersion": 4.2,
       "credentials": {
@@ -525,10 +525,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        16000,
-        10256
+        5600,
+        3488
       ],
-      "id": "ddc0a2db-8a0b-4fd9-9e1c-cfcd30ea5df6",
+      "id": "931fb8c7-ead1-4b63-8f7e-7f5019c1cf26",
       "name": "Loop"
     },
     {
@@ -538,10 +538,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16672,
-        10256
+        6272,
+        3488
       ],
-      "id": "fa7f882d-22f2-45bf-a724-9db9ebd4c50c",
+      "id": "e24cba96-c516-4dcc-a1bd-1be74e1046bf",
       "name": "Pass Binary Data"
     },
     {
@@ -551,10 +551,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16224,
-        10064
+        5824,
+        3296
       ],
-      "id": "c7f0fe22-3859-4efd-b33b-892eb6476169",
+      "id": "eadf40d0-e84d-48cf-929e-b2bc1e4fb3fa",
       "name": "Collect All Asset"
     },
     {
@@ -564,10 +564,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        17120,
-        10336
+        6720,
+        3568
       ],
-      "id": "d2c23763-1d80-4b72-a742-a6515c3dd533",
+      "id": "93656df9-a026-406d-aa1a-d37fc0ece758",
       "name": "Code in JavaScript"
     },
     {
@@ -597,10 +597,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        15760,
-        8448
+        5360,
+        1680
       ],
-      "id": "eacf28c2-d1d7-45a8-bf09-d7a78675d125",
+      "id": "bc436645-7a49-4650-b44c-386fc78fa018",
       "name": "If1"
     },
     {
@@ -614,10 +614,10 @@
       "type": "n8n-nodes-base.linkedIn",
       "typeVersion": 1,
       "position": [
-        16000,
-        9872
+        5600,
+        3104
       ],
-      "id": "922f5cc7-1b57-41a5-b122-ca8e66786c6d",
+      "id": "84835ddf-bed4-43e9-a952-b4f7d357a8e3",
       "name": "Create a post1",
       "credentials": {
         "linkedInOAuth2Api": {
@@ -633,10 +633,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        16192,
-        9264
+        5792,
+        2496
       ],
-      "id": "d74bb84b-150f-47f2-b20a-ceb08aea5f5a",
+      "id": "6588fafe-3f69-4961-b27e-6b4fd477f892",
       "name": "Loop Over Items1"
     },
     {
@@ -650,10 +650,10 @@
       "type": "n8n-nodes-cloudinary.cloudinary",
       "typeVersion": 1,
       "position": [
-        16416,
-        9264
+        6016,
+        2496
       ],
-      "id": "99fdf9c2-2786-466b-9ed9-4518e9cc09fd",
+      "id": "da2985af-b817-4af4-b92a-0c347e122251",
       "name": "Upload an asset from file1",
       "credentials": {
         "cloudinaryApi": {
@@ -686,10 +686,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16864,
-        9312
+        6464,
+        2544
       ],
-      "id": "95ac2c02-77b6-48d7-9c62-2ed1c02ed003",
+      "id": "7950da77-5c37-4b80-a52d-8be8358714b8",
       "name": "Instagram Container-",
       "credentials": {
         "facebookGraphApi": {
@@ -705,10 +705,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16640,
-        9264
+        6240,
+        2496
       ],
-      "id": "b2feb1fd-a8ff-48c3-93c6-a9e937fa3992",
+      "id": "c53ffe13-7a13-4263-ba5b-59bd98a04072",
       "name": "Turn image Landsape3"
     },
     {
@@ -739,10 +739,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16640,
-        9072
+        6240,
+        2304
       ],
-      "id": "0f524be0-a899-4ac2-a764-39ccbce60e19",
+      "id": "90e5219d-f959-4f34-82d5-2b6011d2ff3f",
       "name": "Instagram Container-3",
       "credentials": {
         "facebookGraphApi": {
@@ -758,10 +758,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16416,
-        9072
+        6016,
+        2304
       ],
-      "id": "3ea345dd-2937-4e3c-881c-1940123d92fa",
+      "id": "08693f1a-2aeb-4583-865d-e7ce0c7a0852",
       "name": "Extract ID1"
     },
     {
@@ -788,10 +788,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16864,
-        9072
+        6464,
+        2304
       ],
-      "id": "bd167b80-f1a0-4b96-923c-c95f72cc1003",
+      "id": "adbca15e-7362-4beb-bd0e-74a2d943930d",
       "name": "IG publish1",
       "credentials": {
         "facebookGraphApi": {
@@ -807,10 +807,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16208,
-        8496
+        5808,
+        1728
       ],
-      "id": "d2814988-befc-41b7-a974-5f6324d38bdf",
+      "id": "d63361b8-c789-4a6b-980f-c65f02e035b5",
       "name": "Extract FB ID"
     },
     {
@@ -835,10 +835,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16208,
-        8688
+        5808,
+        1920
       ],
-      "id": "c94bbf5c-4c02-4c58-ad64-bcafe89d70fd",
+      "id": "8a357dbb-2a9a-43df-9aae-526551c5a121",
       "name": "Facebook Container1",
       "credentials": {
         "facebookGraphApi": {
@@ -871,10 +871,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16432,
-        8496
+        6032,
+        1728
       ],
-      "id": "6eece723-8d6e-431d-80a0-5ec8b2206626",
+      "id": "c22c8d67-e3f6-45e5-9c37-7f7771651e05",
       "name": "Facebook Publish1",
       "credentials": {
         "facebookGraphApi": {
@@ -890,10 +890,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        15984,
-        8624
+        5584,
+        1856
       ],
-      "id": "958e1541-c887-42e6-8447-eb644cc63660",
+      "id": "0c96b0d5-ea7b-4060-b218-e7718affc5e3",
       "name": "Loop Over Items3"
     },
     {
@@ -907,10 +907,10 @@
       "type": "n8n-nodes-cloudinary.cloudinary",
       "typeVersion": 1,
       "position": [
-        15984,
-        8880
+        5584,
+        2112
       ],
-      "id": "4bf7bb86-93be-402f-abb0-3c63cac6b7ef",
+      "id": "97fb77e9-d8c9-4e76-bff6-e09e5164feae",
       "name": "Upload an asset from file data1",
       "credentials": {
         "cloudinaryApi": {
@@ -943,10 +943,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16432,
-        8880
+        6032,
+        2112
       ],
-      "id": "0230f04c-6a6a-4121-a08f-d1ac5f97c8ae",
+      "id": "c1033b28-074b-47da-8ba1-61154c5acfa5",
       "name": "Instagram Container1",
       "credentials": {
         "facebookGraphApi": {
@@ -983,10 +983,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        16656,
-        8880
+        6256,
+        2112
       ],
-      "id": "951720da-77bf-4bfd-9a09-64b8cbfc78e9",
+      "id": "937acaec-da11-4cc9-a1fb-51d9d05d04a5",
       "name": "Instagram Post1",
       "credentials": {
         "facebookGraphApi": {
@@ -1017,10 +1017,10 @@
       "type": "n8n-nodes-base.facebookGraphApi",
       "typeVersion": 1,
       "position": [
-        15984,
-        8304
+        5584,
+        1536
       ],
-      "id": "46968040-892d-458b-bc91-b9ef404f9827",
+      "id": "cf5e31b2-7f3d-4500-85fb-b1a3617ec46d",
       "name": "Facebook Graph API1",
       "credentials": {
         "facebookGraphApi": {
@@ -1036,10 +1036,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        16208,
-        8880
+        5808,
+        2112
       ],
-      "id": "ac4dee5f-c751-4a30-8849-9dfe34cf53da",
+      "id": "f464b267-9bf4-41d3-ba27-83813db85c35",
       "name": "Turn image Landsape1"
     },
     {
@@ -1058,10 +1058,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        16880,
-        8880
+        6480,
+        2112
       ],
-      "id": "e61cb03a-a954-4a8f-87ec-87c1ac7f758b",
+      "id": "add60fa0-dd1e-49f0-8f49-977d1925e941",
       "name": "IG",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1087,10 +1087,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        16224,
-        9872
+        5824,
+        3104
       ],
-      "id": "dcf6869d-a216-4bde-8d44-93a0de082ce0",
+      "id": "3635a1e6-68ca-4c19-93bb-79b53b23b371",
       "name": "LINKEDIN",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1116,10 +1116,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        16208,
-        8304
+        5808,
+        1536
       ],
-      "id": "0fcd95d3-5e9b-46a4-95c5-af064ee9b6f8",
+      "id": "9f50d6b0-63d2-49ef-97a7-632b8223ad8b",
       "name": "FB",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1145,10 +1145,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        17088,
-        9072
+        6688,
+        2304
       ],
-      "id": "d6ca0e6f-9ce0-4e99-9302-5aa079b322e6",
+      "id": "982efdca-a68c-4c67-b0e6-2879648637f6",
       "name": "IG1",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1174,10 +1174,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        16672,
-        10064
+        6272,
+        3296
       ],
-      "id": "8e04f2e5-3928-4210-82d2-45a187de1f03",
+      "id": "cf7b70b0-6061-4a66-832c-06d41ee46357",
       "name": "LINKEDIN1",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1203,10 +1203,10 @@
       "type": "n8n-nodes-base.slack",
       "typeVersion": 2.4,
       "position": [
-        16656,
-        8496
+        6256,
+        1728
       ],
-      "id": "94230a8e-b9ab-40d2-a3bd-215baa2306f4",
+      "id": "46f3c0d9-b61a-4724-8fb7-861ec045a1a5",
       "name": "FB1",
       "webhookId": "d18ff656-1062-4caf-8fc8-be3befaa5fcb",
       "credentials": {
@@ -1243,10 +1243,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        15760,
-        9072
+        5360,
+        2304
       ],
-      "id": "0406845b-1a89-4319-b82a-569313b7bfe4",
+      "id": "feb435f4-191c-4bef-89e8-8354a38dbdfd",
       "name": "If"
     },
     {
@@ -1276,10 +1276,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        15984,
-        9552
+        5584,
+        2784
       ],
-      "id": "290527d1-10b7-4fa6-9f0c-8f4dd96415a1",
+      "id": "b8fd0d31-0c46-4c9d-9d9a-dca48dfeedd8",
       "name": "If2"
     },
     {
@@ -1309,58 +1309,58 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        15776,
-        10064
+        5376,
+        3296
       ],
-      "id": "35b7e45b-a627-400d-9b2b-8dec0bf02805",
+      "id": "b77a4d5d-cf48-445b-8362-73fcb661c7ca",
       "name": "If3"
     },
     {
       "parameters": {
-        "content": "## LINKEDIN",
+        "content": "",
         "height": 608,
         "width": 1536,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        15760,
-        9856
+        5360,
+        3088
       ],
       "typeVersion": 1,
-      "id": "19b298db-1edd-48cd-a459-362f1f360835",
+      "id": "29bfb529-2784-45ae-af97-4e5c2fd22c26",
       "name": "Sticky Note"
     },
     {
       "parameters": {
-        "content": "## INSTAGRAM\n",
+        "content": "",
         "height": 576,
         "width": 1520,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        15808,
-        8864
+        5552,
+        2096
       ],
       "typeVersion": 1,
-      "id": "0c493248-d9ef-4dce-9659-814b729a95c8",
+      "id": "337f0283-98c1-4661-9d5d-5e28c4248038",
       "name": "Sticky Note1"
     },
     {
       "parameters": {
-        "content": "## FACEBOOK",
+        "content": "",
         "height": 576,
         "width": 1072,
         "color": 7
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        15728,
-        8224
+        5328,
+        1456
       ],
       "typeVersion": 1,
-      "id": "d880e96d-c27c-49db-b547-7c034e406f34",
+      "id": "31e97cac-a3da-4b76-81e6-577f418b6136",
       "name": "Sticky Note2"
     },
     {
@@ -1470,10 +1470,10 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
       "position": [
-        15504,
-        9120
+        5104,
+        2352
       ],
-      "id": "05d971bf-5945-45c8-a8c9-cbebceffcb19",
+      "id": "4f96a5ca-ae32-47c5-8d18-b33d69b4c5d4",
       "name": "Filter"
     },
     {
@@ -1484,10 +1484,10 @@
       "type": "n8n-nodes-base.twitter",
       "typeVersion": 2,
       "position": [
-        16272,
-        9536
+        5872,
+        2768
       ],
-      "id": "b89e4568-a7cd-42fa-b160-4d6f86a2fc74",
+      "id": "16fa3e83-4d8c-4305-af44-8aa3b10468c0",
       "name": "Create Tweet",
       "credentials": {
         "twitterOAuth2Api": {
@@ -1504,10 +1504,10 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        17936,
-        9184
+        7536,
+        2416
       ],
-      "id": "69dc2d78-2614-4963-be19-e57af35e196b",
+      "id": "b48a8c35-7455-43d5-b33c-13208266223a",
       "name": "Merge"
     },
     {
@@ -1524,10 +1524,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        18192,
-        9248
+        7792,
+        2480
       ],
-      "id": "8c03dafb-89e3-4082-8b77-de9f346ba8c5",
+      "id": "09288018-fb69-4ba8-ad9a-0d032fee50b7",
       "name": "Send Success Alert",
       "credentials": {
         "httpBasicAuth": {
@@ -1535,82 +1535,6 @@
           "name": "Unnamed credential"
         }
       }
-    },
-    {
-      "parameters": {
-        "content": "",
-        "height": 368,
-        "width": 544,
-        "color": 7
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        17856,
-        9088
-      ],
-      "typeVersion": 1,
-      "id": "5a9edb4d-f47d-4f0d-be37-7917382bad42",
-      "name": "Sticky Note3"
-    },
-    {
-      "parameters": {
-        "content": "## AI MODE",
-        "height": 576,
-        "width": 2160,
-        "color": 7
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        13456,
-        8208
-      ],
-      "typeVersion": 1,
-      "id": "8a6cd32b-61d0-445f-89d5-694beed01152",
-      "name": "Sticky Note4"
-    },
-    {
-      "parameters": {
-        "content": "## MANUAL MODE",
-        "height": 336,
-        "width": 1760,
-        "color": 7
-      },
-      "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        13424,
-        9056
-      ],
-      "typeVersion": 1,
-      "id": "8c4fdbb9-8579-41e3-935d-b70c3ddf0d60",
-      "name": "Sticky Note5"
-    },
-    {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "6e1MdInDA4XfG7Z0",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/6e1MdInDA4XfG7Z0",
-          "cachedResultName": "Video Mode -"
-        },
-        "workflowInputs": {
-          "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.3,
-      "position": [
-        13424,
-        9680
-      ],
-      "id": "8b04c760-e366-4d89-834f-c9284a5d2387",
-      "name": "Execute Workflow"
     }
   ],
   "pinData": {},
@@ -1649,13 +1573,6 @@
         [
           {
             "node": "Output multiple images into 1  names",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Execute Workflow",
             "type": "main",
             "index": 0
           }
@@ -2115,72 +2032,6 @@
         ]
       ]
     },
-    "IG": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 2
-          }
-        ]
-      ]
-    },
-    "LINKEDIN": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 4
-          }
-        ]
-      ]
-    },
-    "FB": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "IG1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 3
-          }
-        ]
-      ]
-    },
-    "LINKEDIN1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 5
-          }
-        ]
-      ]
-    },
-    "FB1": {
-      "main": [
-        [
-          {
-            "node": "Merge",
-            "type": "main",
-            "index": 1
-          }
-        ]
-      ]
-    },
     "If": {
       "main": [
         [
@@ -2260,6 +2111,72 @@
         ]
       ]
     },
+    "LINKEDIN1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 5
+          }
+        ]
+      ]
+    },
+    "LINKEDIN": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 4
+          }
+        ]
+      ]
+    },
+    "IG1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "IG": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "FB1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "FB": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Merge": {
       "main": [
         [
@@ -2272,39 +2189,17 @@
       ]
     }
   },
-  "active": true,
+  "active": false,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false,
-    "timeSavedMode": "fixed",
-    "errorWorkflow": "hpHod2UWYmYoS5bz",
-    "callerPolicy": "workflowsFromSameOwner"
+    "availableInMCP": false
   },
-  "versionId": "32bfc732-4398-4b5a-a7e0-45d0be839709",
+  "versionId": "71141def-159c-4d68-a19f-8f2bd6e3a9ff",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "8bbc720ec703f11efaa7199117f6ed0f60e2f7de53f2082e4d68e43b8e81500a"
   },
-  "id": "s8zwbAfYFMj5KkLV",
-  "tags": [
-    {
-      "updatedAt": "2026-03-26T09:18:54.068Z",
-      "createdAt": "2026-03-26T09:18:54.068Z",
-      "id": "GwOpn7RMGGlS7ofD",
-      "name": "Portfolio"
-    },
-    {
-      "updatedAt": "2026-03-26T09:19:01.590Z",
-      "createdAt": "2026-03-26T09:19:01.590Z",
-      "id": "SWCvBx0FVn1T0nbm",
-      "name": "nullscollection"
-    },
-    {
-      "updatedAt": "2026-03-26T09:18:47.364Z",
-      "createdAt": "2026-03-26T09:18:47.364Z",
-      "id": "ZxvykusZVXUYHUjp",
-      "name": "dynamic"
-    }
-  ]
+  "id": "9oKq6llEX73PQwZ7",
+  "tags": []
 }

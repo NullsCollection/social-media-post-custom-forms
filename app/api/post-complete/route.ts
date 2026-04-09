@@ -5,15 +5,13 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     console.log("[post-complete] Received from n8n:", JSON.stringify(body, null, 2));
-    const { executionId, status, platforms, caption } = body;
+    const { executionId, status } = body;
     if (!executionId) {
       return NextResponse.json({ error: "Missing executionId" }, { status: 400 });
     }
     storeCompletion({
       executionId,
       status: status ?? "success",
-      platforms: Array.isArray(platforms) ? platforms : typeof platforms === "string" && platforms ? [platforms] : [],
-      caption: caption ?? "",
     });
     return NextResponse.json({ ok: true });
   } catch {

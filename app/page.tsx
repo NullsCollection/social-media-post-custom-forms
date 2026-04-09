@@ -88,7 +88,7 @@ export default function UploadPage() {
   const [editText, setEditText] = useState("");
   const [modalLocked, setModalLocked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [successModal, setSuccessModal] = useState<string | null>(null);
+  const [successModal, setSuccessModal] = useState(false);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const previewsRef = useRef<string[]>([]);
   const executionIdRef = useRef<string | null>(null);
@@ -122,10 +122,7 @@ export default function UploadPage() {
 
           if (data.completed) {
             stopPolling();
-            const platformList = (data.platforms as string[])
-              .map((p: string) => p.charAt(0).toUpperCase() + p.slice(1))
-              .join(", ");
-            setSuccessModal(platformList);
+            setSuccessModal(true);
             setLoading(false);
             setStatus("idle");
             executionIdRef.current = null;
@@ -873,7 +870,7 @@ export default function UploadPage() {
         <div
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-          onClick={() => setSuccessModal(null)}
+          onClick={() => setSuccessModal(false)}
         >
           <div
             className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-4 animate-fade-in"
@@ -886,10 +883,10 @@ export default function UploadPage() {
             </div>
             <div className="text-center">
               <h3 className="text-lg font-bold text-gray-900">Successfully Posted!</h3>
-              <p className="text-sm text-gray-500 mt-1">Your content was posted to {successModal}.</p>
+              <p className="text-sm text-gray-500 mt-1">Your content has been posted.</p>
             </div>
             <button
-              onClick={() => setSuccessModal(null)}
+              onClick={() => setSuccessModal(false)}
               className="w-full py-2.5 rounded-xl bg-[#1a2035] hover:bg-[#232c47] text-white text-sm font-semibold transition-colors"
             >
               Done

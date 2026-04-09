@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
   if (completion) {
     return NextResponse.json({
       completed: true,
-      platforms: completion.platforms,
-      caption: completion.caption,
     });
   }
 
