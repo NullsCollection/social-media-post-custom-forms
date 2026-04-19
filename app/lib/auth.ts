@@ -1,4 +1,12 @@
 import { NextRequest } from "next/server";
+import { timingSafeEqual } from "crypto";
+
+function safeCompare(a: string, b: string): boolean {
+  const aBuf = Buffer.from(a);
+  const bBuf = Buffer.from(b);
+  if (aBuf.length !== bBuf.length) return false;
+  return timingSafeEqual(aBuf, bBuf);
+}
 
 export function verifyBasicAuth(req: NextRequest): boolean {
   const header = req.headers.get("authorization") ?? "";
@@ -9,7 +17,7 @@ export function verifyBasicAuth(req: NextRequest): boolean {
   const pass = rest.join(":");
 
   return (
-    user === process.env.BASIC_AUTH_USER &&
-    pass === process.env.BASIC_AUTH_PASS
+    safeCompare(user, process.env.BASIC_AUTH_USER ?? "") &&
+    safeCompare(pass, process.env.BASIC_AUTH_PASS ?? "")
   );
 }

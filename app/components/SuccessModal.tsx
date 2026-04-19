@@ -1,10 +1,17 @@
+import { useRef } from "react";
+import { useFocusTrap } from "@/app/hooks/useFocusTrap";
+
 interface SuccessModalProps {
   open: boolean;
   onClose: () => void;
 }
 
 export function SuccessModal({ open, onClose }: SuccessModalProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(containerRef, open);
+
   if (!open) return null;
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -12,6 +19,10 @@ export function SuccessModal({ open, onClose }: SuccessModalProps) {
       onClick={onClose}
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="success-modal-title"
         className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 flex flex-col items-center gap-4 animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
@@ -25,7 +36,9 @@ export function SuccessModal({ open, onClose }: SuccessModalProps) {
           </svg>
         </div>
         <div className="text-center">
-          <h3 className="text-lg font-bold text-gray-900">Successfully Posted!</h3>
+          <h3 id="success-modal-title" className="text-lg font-bold text-gray-900">
+            Successfully Posted!
+          </h3>
           <p className="text-sm text-gray-500 mt-1">Your content has been posted.</p>
         </div>
         <button

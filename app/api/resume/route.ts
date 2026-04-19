@@ -14,11 +14,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "No pending caption for this executionId" }, { status: 404 });
     }
 
-    await fetch(entry.resumeUrl, {
+    const resumeRes = await fetch(entry.resumeUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ data: { approval } }),
     });
+
+    if (!resumeRes.ok) {
+      console.error(`[resume] n8n resume failed — status: ${resumeRes.status}, executionId: ${executionId}`);
+      return NextResponse.json({ error: "Failed to resume workflow" }, { status: 502 });
+    }
 
     return NextResponse.json({ ok: true });
   } catch {

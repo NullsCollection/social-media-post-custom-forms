@@ -70,7 +70,7 @@ export function ImageDropZone({
                 {i + 1}
               </div>
               {imageFiles.length > 1 && (
-                <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                <div className="absolute bottom-1 left-1 flex gap-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all">
                   <button
                     onClick={() => onMoveUp(i)}
                     disabled={i === 0}
@@ -95,7 +95,7 @@ export function ImageDropZone({
               )}
               <button
                 onClick={() => onRemove(i)}
-                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 hover:bg-red-500 text-gray-700 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                className="absolute top-1 right-1 w-5 h-5 rounded-full bg-white/90 hover:bg-red-500 text-gray-700 hover:text-white flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-all shadow-lg"
                 aria-label="Remove"
               >
                 <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth={2} className="w-2.5 h-2.5">

@@ -70,11 +70,19 @@ export default function UploadPage() {
   });
 
   const handleApprove = async (executionId: string) => {
-    await fetch("/api/resume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ executionId, approval: "approved" }),
-    }).catch(() => {});
+    setLoading(true);
+    try {
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ executionId, approval: "approved" }),
+      });
+      if (!res.ok) throw new Error("Resume failed");
+    } catch {
+      showToast("Failed to send approval. Please try again.", "error");
+      setLoading(false);
+      return;
+    }
     setCaptionModal(null);
     await fetch(`/api/caption-status?executionId=${encodeURIComponent(executionId)}`, {
       method: "DELETE",
@@ -84,11 +92,19 @@ export default function UploadPage() {
   };
 
   const handleSubmitEdit = async (executionId: string, editText: string) => {
-    await fetch("/api/resume", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ executionId, approval: editText }),
-    }).catch(() => {});
+    setLoading(true);
+    try {
+      const res = await fetch("/api/resume", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ executionId, approval: editText }),
+      });
+      if (!res.ok) throw new Error("Resume failed");
+    } catch {
+      showToast("Failed to send edit. Please try again.", "error");
+      setLoading(false);
+      return;
+    }
     setCaptionModal(null);
     await fetch(`/api/caption-status?executionId=${encodeURIComponent(executionId)}`, {
       method: "DELETE",
@@ -96,6 +112,12 @@ export default function UploadPage() {
     showToast("Edit sent! Regenerating caption...", "success", 3000);
     startPolling(executionId);
   };
+
+  const handleModeChange = useCallback((newMode: Mode) => {
+    if (newMode === "video") resetImages();
+    else if (mode === "video") setVideoUrl("");
+    setMode(newMode);
+  }, [mode, resetImages]);
 
   const togglePlatform = (id: SocialPlatform) => {
     setSelectedPlatforms((prev) =>
@@ -183,7 +205,7 @@ export default function UploadPage() {
               mode={mode}
               caption={caption}
               videoUrl={videoUrl}
-              onModeChange={setMode}
+              onModeChange={handleModeChange}
               onCaptionChange={setCaption}
               onVideoUrlChange={setVideoUrl}
             />

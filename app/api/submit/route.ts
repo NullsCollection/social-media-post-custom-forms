@@ -10,6 +10,17 @@ export async function POST(req: NextRequest) {
     const platforms = formData.getAll("platforms[]") as string[];
     const images = formData.getAll("images") as File[];
 
+    const ALLOWED_MODES = ["manual", "ai", "video"];
+    if (!ALLOWED_MODES.includes(mode)) {
+      return NextResponse.json({ error: "Invalid mode" }, { status: 400 });
+    }
+
+    const ALLOWED_PLATFORMS = ["facebook", "instagram", "twitter", "linkedin"];
+    const validPlatforms = platforms.filter((p) => ALLOWED_PLATFORMS.includes(p));
+    if (!validPlatforms.length) {
+      return NextResponse.json({ error: "At least one valid platform is required" }, { status: 400 });
+    }
+
     const validImages = images.filter((f) => f && f.size > 0);
 
     if (mode !== "video" && !validImages.length) {
@@ -17,6 +28,24 @@ export async function POST(req: NextRequest) {
         { error: "At least one image is required" },
         { status: 400 },
       );
+    }
+
+    if (mode === "video") {
+      if (!videoUrl || !videoUrl.trim()) {
+        return NextResponse.json({ error: "videoUrl is required in video mode" }, { status: 400 });
+      }
+      let parsed: URL;
+      try {
+        parsed = new URL(videoUrl);
+      } catch {
+        return NextResponse.json({ error: "Invalid videoUrl" }, { status: 400 });
+      }
+      if (parsed.protocol !== "https:" && parsed.protocol !== "http:") {
+        return NextResponse.json({ error: "videoUrl must use http or https" }, { status: 400 });
+      }
+      if (videoUrl.length > 2048) {
+        return NextResponse.json({ error: "videoUrl is too long" }, { status: 400 });
+      }
     }
 
     if (!process.env.WEBHOOK_URL) {
@@ -34,7 +63,7 @@ export async function POST(req: NextRequest) {
     forwardData.append("caption", caption || "");
     forwardData.append("mode", mode || "manual");
     forwardData.append("videoUrl", videoUrl || "");
-    platforms.forEach((platform) =>
+    validPlatforms.forEach((platform) =>
       forwardData.append("platforms[]", platform),
     );
     forwardData.append(
@@ -56,15 +85,10 @@ export async function POST(req: NextRequest) {
       body: forwardData,
     });
 
-    console.log("Webhook response status:", webhookRes.status);
-    const responseText = await webhookRes.text();
-    console.log("Webhook response:", responseText);
-
     if (!webhookRes.ok) {
-      return NextResponse.json(
-        { error: "Webhook failed", details: responseText },
-        { status: 502 },
-      );
+      const responseText = await webhookRes.text();
+      console.error(`[submit] Webhook failed — status: ${webhookRes.status}, body: ${responseText}`);
+      return NextResponse.json({ error: "Webhook failed" }, { status: 502 });
     }
 
     return NextResponse.json({ success: true });

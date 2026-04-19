@@ -2,6 +2,8 @@
 
 import { useRef, useCallback } from "react";
 
+const MAX_RETRIES = 15;
+
 interface PollingCallbacks {
   onComplete: () => void;
   onCaptionReady: (caption: string, executionId: string) => void;
@@ -11,6 +13,7 @@ interface PollingCallbacks {
 export function usePolling({ onComplete, onCaptionReady, onError }: PollingCallbacks) {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const executionIdRef = useRef<string | null>(null);
+  const retryRef = useRef(0);
 
   const stopPolling = useCallback(() => {
     if (pollingRef.current) {
@@ -23,15 +26,25 @@ export function usePolling({ onComplete, onCaptionReady, onError }: PollingCallb
     (id: string) => {
       stopPolling();
       executionIdRef.current = id;
+      retryRef.current = 0;
+
       pollingRef.current = setInterval(async () => {
         try {
           const res = await fetch(
             `/api/caption-status?executionId=${encodeURIComponent(id)}`,
           );
           if (!res.ok) {
-            console.error(`[usePolling] Status check failed — HTTP ${res.status} for executionId: ${id}`);
+            retryRef.current += 1;
+            console.error(`[usePolling] HTTP ${res.status} for executionId: ${id} (attempt ${retryRef.current})`);
+            if (retryRef.current >= MAX_RETRIES) {
+              stopPolling();
+              executionIdRef.current = null;
+              onError("Could not reach the server. Please refresh and try again.");
+            }
             return;
           }
+
+          retryRef.current = 0;
           const data = await res.json();
 
           if (data.completed) {
@@ -49,7 +62,13 @@ export function usePolling({ onComplete, onCaptionReady, onError }: PollingCallb
             onCaptionReady(data.caption, data.executionId);
           }
         } catch (err) {
-          console.error("[usePolling] Network error while checking status:", err);
+          retryRef.current += 1;
+          console.error(`[usePolling] Network error (attempt ${retryRef.current}):`, err);
+          if (retryRef.current >= MAX_RETRIES) {
+            stopPolling();
+            executionIdRef.current = null;
+            onError("Lost connection to the server. Please refresh and try again.");
+          }
         }
       }, 2000);
     },

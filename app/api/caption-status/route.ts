@@ -25,7 +25,6 @@ export async function GET(req: NextRequest) {
     pending: false,
     caption: caption.caption,
     executionId: caption.executionId,
-    resumeUrl: caption.resumeUrl,
     fileName: caption.fileName,
   });
 }

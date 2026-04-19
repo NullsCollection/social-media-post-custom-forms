@@ -7,6 +7,8 @@ export function Toast({ message, variant = "success" }: ToastProps) {
   const isError = variant === "error";
   return (
     <div
+      role="alert"
+      aria-live="assertive"
       className={`fixed bottom-6 right-6 z-50 flex items-center gap-2.5 text-white text-sm font-medium px-4 py-3 rounded-xl shadow-lg animate-fade-in ${
         isError ? "bg-red-500" : "bg-emerald-500"
       }`}

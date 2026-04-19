@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useFocusTrap } from "@/app/hooks/useFocusTrap";
 
 interface CaptionReviewModalProps {
   modal: { caption: string; executionId: string } | null;
@@ -11,20 +12,25 @@ interface CaptionReviewModalProps {
 export function CaptionReviewModal({ modal, onApprove, onSubmitEdit }: CaptionReviewModalProps) {
   const [editMode, setEditMode] = useState(false);
   const [editText, setEditText] = useState("");
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useFocusTrap(containerRef, modal !== null);
+
+  // STATE-01: reset local state whenever a new caption arrives
+  useEffect(() => {
+    setEditMode(false);
+    setEditText("");
+  }, [modal]);
 
   if (!modal) return null;
 
   const handleApprove = () => {
     onApprove(modal.executionId);
-    setEditMode(false);
-    setEditText("");
   };
 
   const handleSubmitEdit = () => {
     if (!editText.trim()) return;
     onSubmitEdit(modal.executionId, editText.trim());
-    setEditMode(false);
-    setEditText("");
   };
 
   return (
@@ -33,10 +39,16 @@ export function CaptionReviewModal({ modal, onApprove, onSubmitEdit }: CaptionRe
       style={{ backgroundColor: "rgba(0,0,0,0.5)" }}
     >
       <div
+        ref={containerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="caption-review-title"
         className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-bold text-gray-900">Review Your Caption</h2>
+        <h2 id="caption-review-title" className="text-lg font-bold text-gray-900">
+          Review Your Caption
+        </h2>
         <div className="bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 text-sm text-gray-700 leading-relaxed whitespace-pre-wrap">
           {modal.caption}
         </div>
@@ -59,6 +71,7 @@ export function CaptionReviewModal({ modal, onApprove, onSubmitEdit }: CaptionRe
         ) : (
           <div className="space-y-3">
             <textarea
+              autoFocus
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
               placeholder="Describe what to change..."
