@@ -6,12 +6,13 @@ export async function POST(req: NextRequest) {
     const executionId = formData.get("executionId") as string;
     const caption = formData.get("caption") as string;
     const mode = formData.get("mode") as string;
+    const videoUrl = formData.get("videoUrl") as string;
     const platforms = formData.getAll("platforms[]") as string[];
     const images = formData.getAll("images") as File[];
 
     const validImages = images.filter((f) => f && f.size > 0);
 
-    if (!validImages.length) {
+    if (mode !== "video" && !validImages.length) {
       return NextResponse.json(
         { error: "At least one image is required" },
         { status: 400 },
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
     forwardData.append("executionId", executionId || "");
     forwardData.append("caption", caption || "");
     forwardData.append("mode", mode || "manual");
+    forwardData.append("videoUrl", videoUrl || "");
     platforms.forEach((platform) =>
       forwardData.append("platforms[]", platform),
     );

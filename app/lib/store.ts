@@ -10,8 +10,17 @@ type CompletionEntry = {
   status: string;
 };
 
-const captionStore = new Map<string, CaptionEntry>();
-const completionStore = new Map<string, CompletionEntry>();
+declare global {
+  // eslint-disable-next-line no-var
+  var __captionStore: Map<string, CaptionEntry> | undefined;
+  // eslint-disable-next-line no-var
+  var __completionStore: Map<string, CompletionEntry> | undefined;
+}
+
+const captionStore: Map<string, CaptionEntry> =
+  global.__captionStore ?? (global.__captionStore = new Map());
+const completionStore: Map<string, CompletionEntry> =
+  global.__completionStore ?? (global.__completionStore = new Map());
 
 const TTL = 10 * 60 * 1000;
 
